@@ -19,9 +19,12 @@ EOL
 
 # Reset all variables that might be set
 nosync=0
+noccache=0
 release=0
 clean=0
 help=0
+debug=0
+zipname=""
 
 while :
 do
@@ -35,6 +38,10 @@ do
             nosync=1
             shift
             ;;
+        -ncc | --no_ccache)
+            noccache=1
+            shift
+            ;;
         -r | --release)
             release=1
             shift
@@ -43,6 +50,10 @@ do
             clean=1
             shift
             ;;
+        -d | --debug)
+            debug=1
+            shift
+            ;; 
         --) # End of all options
             shift
             break
@@ -55,57 +66,106 @@ done
 
 if [[ $help = 0 ]]; then
 
-echo '##########'
-echo 'syncing up'
-echo '##########'
-#reset frameworks base to properly sync and apply the patch without errors
-cd frameworks/base
-git reset --hard HEAD
-cd  ~/CM11
-echo '##########'
+# Define the future zipname, 'cause if we start the build 23:59 on day 1
+# day 1 will be used for the zip, but day 2 would be used for the upload command
+zipname=cm-11-$(date -u +%Y%m%d)-UNOFFICIAL-p880.zip
 
-if [[ $nosync = 1 ]]; then
-echo 'skipping sync'
-else
-repo sync -j20 -d
+if [[ $debug = 1 ]]; then
+	echo '##########'
+	echo 'future zipname'
+	echo '##########'
+	echo ''
+	echo $zipname
 fi
 
+if [[ $noccache = 0 ]]; then
+echo ''
 echo '##########'
-echo 'applying double-press power patch'
+echo 'setting up ccache'
 echo '##########'
-cp ./WindowManager-Fix-double-press-power-button.patch ./frameworks/base/WindowManager-Fix-double-press-power-button.patch
-cd frameworks/base
-git apply WindowManager-Fix-double-press-power-button.patch
-cd  ~/CM11
+echo ''
+export USE_CCACHE=1
+export CCACHE_DIR=/home/laufersteppenwolf/ccache/CM11
+export CCACHE_LOGFILE=/home/laufersteppenwolf/ccache/CM11/ccache.log
+fi
+
+echo ''
 echo '##########'
 echo 'setup environment'
 echo '##########'
+echo ''
 . build/envsetup.sh
 
-if [[ $clean = 1 ]]; then
+echo ''
 echo '##########'
-echo 'make clean'
+echo 'syncing up'
 echo '##########'
-make clean
+echo ''
+#reset frameworks base to properly sync and apply the patch without errors
+cd frameworks/base
+git reset --hard HEAD
+croot
+echo ''
+echo '##########'
+echo ''
+if [[ $nosync = 1 ]]; then
+	echo 'skipping sync'
+else
+	repo sync -j30 -d
 fi
 
+echo ''
+echo '##########'
+echo 'applying double-press power patch'
+echo '##########'
+echo ''
+cp ./WindowManager-Fix-double-press-power-button.patch ./frameworks/base/WindowManager-Fix-double-press-power-button.patch
+cd frameworks/base
+git apply WindowManager-Fix-double-press-power-button.patch
+rm WindowManager-Fix-double-press-power-button.patch
+croot
+
+if [[ $clean = 1 ]]; then
+	echo ''
+	echo '##########'
+	echo 'make clean'
+	echo '##########'
+	echo ''
+	make clean
+fi
+
+echo ''
 echo '##########'
 echo 'lunch p880'
 echo '##########'
+echo ''
 lunch cm_p880-eng
 
 if [[ $clean = 0 ]]; then
-echo '##########'
-echo 'make installclean'
-echo '##########'
-make installclean
+	echo ''
+	echo '##########'
+	echo 'make installclean'
+	echo '##########'
+	echo ''
+	make installclean
 fi
+
+echo ''
 echo '##########'
 echo 'build'
 echo '##########'
-time make -j32 bacon
+echo ''
+time make -j20 bacon
+
+# resetting ccache
+export USE_CCACHE=0
 
 if [[ $release = 1 ]]; then
-	scp ~/CM11/out/target/product/p880/cm-11-$(date -u +%Y%m%d)-UNOFFICIAL-p880.zip goo.im:public_html/CM11/cm-11-$(date -u +%Y%m%d)-UNOFFICIAL-p880.zip
+	echo ''
+	echo '##########'
+	echo 'uploading build'
+	echo '##########'
+	scp ./out/target/product/p880/$zipname goo.im:public_html/CM11/$zipname
+	echo ''
 fi
 fi
