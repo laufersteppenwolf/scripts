@@ -34,7 +34,7 @@ cp ../tools/testkey.pk8 testkey.pk8
 # Zipping stuff up
 zip -r temp_zip.zip META-INF kernel system 
 echo "ZIP Ready, signing it"
-java -jar signapk.jar testkey.x509.pem testkey.pk8 temp_zip.zip $zipname
+java -jar signapk.jar -w testkey.x509.pem testkey.pk8 temp_zip.zip $zipname
 
 cp -f $zipname ../$zipname
 
