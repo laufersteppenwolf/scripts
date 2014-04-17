@@ -3,9 +3,9 @@
 show_help() {
 cat << EOL
 
-Usage: .build.sh [-hnrc]
-Compile CM11 with options to not repo sync, to make clean (or else make installclean)
-or to automatically upload the build.
+Usage: .build.sh [-h -n -r -c -ncc -d -j #]
+Compile CM11 with options to not repo sync, to make clean (or else make installclean),
+to automatically upload the build, to not use ccache or to use a custom number of jobs.
 
 Default behavior is to sync and make installclean.
 
@@ -81,7 +81,7 @@ do
     esac
 done
 
-if [[ $help = 0 ]]; then
+if [[ $help = 0 ]]; then		# skip the build if help is set
 
 # Define the future zipname, 'cause if we start the build 23:59 on day 1
 # day 1 will be used for the zip, but day 2 would be used for the upload command
@@ -95,7 +95,7 @@ if [[ $debug = 1 ]]; then
 	echo $zipname
 fi
 
-if [[ $noccache = 0 ]]; then
+if [[ $noccache = 0 ]]; then		# use ccache by default
 echo ''
 echo '##########'
 echo 'setting up ccache'
@@ -111,14 +111,14 @@ echo '##########'
 echo 'setup environment'
 echo '##########'
 echo ''
-. build/envsetup.sh
+. build/envsetup.sh					# set up the environment
 
 echo ''
 echo '##########'
 echo 'syncing up'
 echo '##########'
 echo ''
-#reset frameworks base to properly sync and apply the patch without errors
+#reset frameworks base to properly sync and apply the patch without errors (only for p880)
 cd frameworks/base
 git reset --hard HEAD
 croot
@@ -131,16 +131,16 @@ else
 	repo sync -j$jobs_sync -d
 fi
 
-echo ''
-echo '##########'
-echo 'applying double-press power patch'
-echo '##########'
-echo ''
-cp ./WindowManager-Fix-double-press-power-button.patch ./frameworks/base/WindowManager-Fix-double-press-power-button.patch
-cd frameworks/base
-git apply WindowManager-Fix-double-press-power-button.patch
-rm WindowManager-Fix-double-press-power-button.patch
-croot
+echo ''                                                                                                                         ############################
+echo '##########'                                                                                                               ###                      ###
+echo 'applying double-press power patch'                                                                                        ###                      ###
+echo '##########'                                                                                                               ###                      ###
+echo ''                                                                                                                         ### only needed for p880 ###
+cp ./WindowManager-Fix-double-press-power-button.patch ./frameworks/base/WindowManager-Fix-double-press-power-button.patch      ###                      ###
+cd frameworks/base                                                                                                              ###                      ###
+git apply WindowManager-Fix-double-press-power-button.patch                                                                     ###                      ###
+rm WindowManager-Fix-double-press-power-button.patch                                                                            ###                      ###
+croot                                                                                                                           ############################
 
 if [[ $clean = 1 ]]; then
 	echo ''
@@ -158,7 +158,7 @@ echo '##########'
 echo ''
 lunch $rom""_$device_codename-eng
 
-if [[ $clean = 0 ]]; then
+if [[ $clean = 0 ]]; then		# make installclean only if "make clean" wasn't issued
 	echo ''
 	echo '##########'
 	echo 'make installclean'
@@ -172,22 +172,23 @@ echo '##########'
 echo 'build'
 echo '##########'
 echo ''
+
 if [[ $debug = 1 ]]; then
-	echo 'Number of jobs: $jobs_build'
+	echo "Number of jobs: $jobs_build"
 	echo ''
 fi
 
-time make -j$jobs_build bacon
+time make -j$jobs_build bacon	# build with the desired -j value
 
 # resetting ccache
 export USE_CCACHE=0
 
-if [[ $release = 1 ]]; then
+if [[ $release = 1 ]]; then		# upload the compiled build
 	echo ''
 	echo '##########'
 	echo 'uploading build'
 	echo '##########'
-	scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname
+	scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname 	# upload via ssh too goo.im servers
 	echo ''
 fi
 fi
