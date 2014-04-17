@@ -9,13 +9,26 @@ or to automatically upload the build.
 
 Default behavior is to sync and make installclean.
 
-    -h | --help          display this help and exit
-    -n | --nosync        do not sync
-    -r | --release       upload the build after compilation
-    -c | --clean         make clean instead of installclean
+    -h   | --help           display this help and exit
+    -n   | --nosync         do not sync
+    -r   | --release        upload the build after compilation
+    -c   | --clean          make clean instead of installclean
+    -ncc | --no_ccache		build without ccache
+    -d   | --debug          show some debug info
+    -j #                    set a custom number of jobs to build
 
 EOL
 }
+
+# Configurable parameters
+ccache_dir=/home/laufersteppenwolf/ccache/CM11
+ccache_log=/home/laufersteppenwolf/ccache/CM11/ccache.log
+jobs_sync=30
+jobs_build=20
+rom=cm
+rom_version=11
+device_codename=p880
+
 
 # Reset all variables that might be set
 nosync=0
@@ -46,6 +59,10 @@ do
             release=1
             shift
             ;;
+        -j)
+            jobs_build=$2
+            shift
+            ;;
         -c | --clean)
             clean=1
             shift
@@ -68,7 +85,7 @@ if [[ $help = 0 ]]; then
 
 # Define the future zipname, 'cause if we start the build 23:59 on day 1
 # day 1 will be used for the zip, but day 2 would be used for the upload command
-zipname=cm-11-$(date -u +%Y%m%d)-UNOFFICIAL-p880.zip
+zipname=$rom-$rom_version-$(date -u +%Y%m%d)-UNOFFICIAL-$device_codename.zip
 
 if [[ $debug = 1 ]]; then
 	echo '##########'
@@ -85,8 +102,8 @@ echo 'setting up ccache'
 echo '##########'
 echo ''
 export USE_CCACHE=1
-export CCACHE_DIR=/home/laufersteppenwolf/ccache/CM11
-export CCACHE_LOGFILE=/home/laufersteppenwolf/ccache/CM11/ccache.log
+export CCACHE_DIR=$ccache_dir
+export CCACHE_LOGFILE=$ccache_log
 fi
 
 echo ''
@@ -111,7 +128,7 @@ echo ''
 if [[ $nosync = 1 ]]; then
 	echo 'skipping sync'
 else
-	repo sync -j30 -d
+	repo sync -j$jobs_sync -d
 fi
 
 echo ''
@@ -139,7 +156,7 @@ echo '##########'
 echo 'lunch p880'
 echo '##########'
 echo ''
-lunch cm_p880-eng
+lunch $rom""_$device_codename-eng
 
 if [[ $clean = 0 ]]; then
 	echo ''
@@ -155,7 +172,12 @@ echo '##########'
 echo 'build'
 echo '##########'
 echo ''
-time make -j20 bacon
+if [[ $debug = 1 ]]; then
+	echo 'Number of jobs: $jobs_build'
+	echo ''
+fi
+
+time make -j$jobs_build bacon
 
 # resetting ccache
 export USE_CCACHE=0
@@ -165,7 +187,7 @@ if [[ $release = 1 ]]; then
 	echo '##########'
 	echo 'uploading build'
 	echo '##########'
-	scp ./out/target/product/p880/$zipname goo.im:public_html/CM11/$zipname
+	scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname
 	echo ''
 fi
 fi
