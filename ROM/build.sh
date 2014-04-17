@@ -3,7 +3,7 @@
 show_help() {
 cat << EOL
 
-Usage: .build.sh [-h -n -r -c -ncc -d -j #]
+Usage: . build.sh [-h -n -r -c -ncc -d -j #]
 Compile CM11 with options to not repo sync, to make clean (or else make installclean),
 to automatically upload the build, to not use ccache or to use a custom number of jobs.
 
