@@ -3,7 +3,7 @@
 # By laufersteppenwolf
 
 ####### defines #######
-zipname="WWJB_v009_anykernel.zip"
+zipname="WWJB_v009_anykernel.zip"                  # filename of the anykernel updater zip
 
 
 echo "*****************************"
@@ -32,13 +32,13 @@ cp ../tools/testkey.x509.pem testkey.x509.pem
 cp ../tools/testkey.pk8 testkey.pk8
 
 # Zipping stuff up
-zip -r temp_zip.zip META-INF kernel system 
+zip -r temp_zip.zip META-INF kernel system                                   # zip all needed files into "temp_zip.zip"
 echo "ZIP Ready, signing it"
-java -jar signapk.jar -w testkey.x509.pem testkey.pk8 temp_zip.zip $zipname
+java -jar signapk.jar -w testkey.x509.pem testkey.pk8 temp_zip.zip $zipname  # sign the zip and name the signed zip "$zipname"
 
-cp -f $zipname ../$zipname
+cp -f $zipname ../$zipname                                                   # copy the finished file into the output folder
 
-# Removing out
+# Removing the working dir
 
 cd ..
 rm -rf out
