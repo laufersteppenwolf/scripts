@@ -118,29 +118,11 @@ echo '##########'
 echo 'syncing up'
 echo '##########'
 echo ''
-#reset frameworks base to properly sync and apply the patch without errors (only for p880)
-cd frameworks/base
-git reset --hard HEAD
-croot
-echo ''
-echo '##########'
-echo ''
 if [[ $nosync = 1 ]]; then
 	echo 'skipping sync'
 else
 	repo sync -j$jobs_sync -d
 fi
-
-echo ''                                                                                                                         ############################
-echo '##########'                                                                                                               ###                      ###
-echo 'applying double-press power patch'                                                                                        ###                      ###
-echo '##########'                                                                                                               ###                      ###
-echo ''                                                                                                                         ### only needed for p880 ###
-cp ./WindowManager-Fix-double-press-power-button.patch ./frameworks/base/WindowManager-Fix-double-press-power-button.patch      ###                      ###
-cd frameworks/base                                                                                                              ###                      ###
-git apply WindowManager-Fix-double-press-power-button.patch                                                                     ###                      ###
-rm WindowManager-Fix-double-press-power-button.patch                                                                            ###                      ###
-croot                                                                                                                           ############################
 
 if [[ $clean = 1 ]]; then
 	echo ''
