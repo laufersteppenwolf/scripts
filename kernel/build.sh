@@ -26,10 +26,14 @@ echo '#############'
 echo ''
 mkdir -p out/modules                                                       # make dirs for zImage and modules
 cp arch/arm/boot/zImage out/zImage                                         # copy zImage and modules
-cp drivers/scsi/scsi_wait_scan.ko out/modules/scsi_wait_scan.ko
-cp drivers/usb/serial/baseband_usb_chr.ko out/modules/baseband_usb_chr.ko
-cp crypto/tcrypt.ko out/modules/tcrypt.ko
-cp drivers/net/usb/raw_ip_net.ko out/modules/raw_ip_net.ko
+# Find and copy modules
+find ./drivers -name '*.ko' | xargs -I {} cp {} ./out/modules/
+find ./crypto -name '*.ko' | xargs -I {} cp {} ./out/modules/
+
+#cp drivers/scsi/scsi_wait_scan.ko out/modules/scsi_wait_scan.ko
+#cp drivers/usb/serial/baseband_usb_chr.ko out/modules/baseband_usb_chr.ko
+#cp crypto/tcrypt.ko out/modules/tcrypt.ko
+#cp drivers/net/usb/raw_ip_net.ko out/modules/raw_ip_net.ko
 cp -r out/* ~/smb/kernel/out/                                              # copy zImage and modules to a network drive
 echo 'done'
 echo ''
