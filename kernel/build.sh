@@ -31,6 +31,7 @@ find -name '*.ko' | xargs -I {} cp {} ./out/modules/
 cp -r out/* ~/smb/kernel/out/                                              # copy zImage and modules to a network drive
 echo 'done'
 echo ''
+if [ -d arch/arm/boot/zImage ]; then
 echo '#############'
 echo 'Making Anykernel zip'
 echo '#############'
@@ -46,3 +47,8 @@ echo ''
 echo '#############'
 echo 'build finished successfully'
 echo '#############'
+else
+echo '#############'
+echo 'build failed!'
+echo '#############'
+fi
