@@ -43,6 +43,10 @@ echo '#############'
 echo ''
 cd ~/smb/kernel/out/                                                       # cd to the network drive
 . pack_cwm.sh                                                              # execute the script to make an anykernel updater zip
+if [[ $1 = -d ]]; then
+cp $zipname ~/Dropbox/Android/kernel/$zipname
+echo "Copying $zipname to Dropbox"
+fi
 cd $local_dir                                                              # cd back to the old dir
 echo ''
 echo '#############'
