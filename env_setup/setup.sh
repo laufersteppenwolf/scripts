@@ -76,7 +76,7 @@ do
 done
 
 
-if [[ auto != 1 || java_set != 1 ]]
+if [[ auto = 0 || java_set = 0 ]]; then
 	echo "Please specify the Java version you would like me to install by typing the number:"
 	echo ""
 	echo "1)  Oracle JDK 6"
