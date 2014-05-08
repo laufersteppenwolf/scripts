@@ -12,6 +12,7 @@ Default behavior is to ask before installing anything.
     -h   | --help           Display this help and exit
     -a   | --automated      Don't ask for anything and do everything completely automated.
     -j # | --java #			Specify the desired Java version
+    -e   | --extended		Install some extended, useful packages
 
 Javaversions to be specified:
 	1	Oracle JDK 6 (default)
@@ -33,15 +34,15 @@ function note() {
 auto=0
 help=0
 debug=0
-
+java_set=0
+extended=0
 
 # Tunables
 local_dir=$PWD
 use_ccache=1
 ccache_size="10G"
 make_jobs=4
-java_package=1
-java_set=0
+java_package=1		# Default value
 
 
 while :
@@ -63,6 +64,10 @@ do
         -j | --java)
              java_package=$2
              java_set=1
+             shift
+            ;;
+        -e | --extended)
+             extended=1
              shift
             ;;
         --) # End of all options
@@ -103,6 +108,7 @@ if [[ $help = 0 ]]; then		# skip the install if help is set
 if [[ $auto = 1 ]]; then
 auto_param_ubuntu="-y"
 auto_param_arch="--noconfirm"
+extended=1
 else
 auto_param_ubuntu=""
 auto_param_arch=""
@@ -224,9 +230,6 @@ ln -s /usr/bin/python2-config ~/bin/python-config
 fi
 fi
 
-note Geany
-$install geany
-
 note SDK
 mkdir tmp
 cd tmp
@@ -246,9 +249,15 @@ rm -rf adt.zip
 cd $local_dir
 rm -rf tmp
 
-if [[ $distro = Arch ]]; then
-$install android-udev
-fi
+if [[ extended = 1 ]]; then
+	note "extended packages"
+	
+	note Geany
+	$install geany
+
+	if [[ $distro = Arch ]]; then
+		$install android-udev
+	fi
 
 
 fi
