@@ -9,15 +9,17 @@ Setup the complete build environment including all needed files/packages
 
 Default behavior is to ask before installing anything.
 
-    -h   | --help           Display this help and exit
-    -a   | --automated      Don't ask for anything and do everything completely automated.
-    -j # | --java #			Specify the desired Java version
-    -e   | --extended		Install some extended, useful packages
+    -h   	| --help           Display this help and exit
+    -a   	| --automated      Don't ask for anything and do everything completely automated.
+    -j # 	| --java #			Specify the desired Java version
+    -e   	| --extended		Install some extended, useful packages
+    -s ".."	| --special ".."	Install some user-defined packages. If several packages are desired, please list them within ""
 
 Javaversions to be specified:
 	1	Oracle JDK 6 (default)
 	2	OpenJDK 6
 	3	OpenJDK 7
+	
 EOL
 }
 
@@ -31,14 +33,18 @@ function note() {
 }
 
 # Reset all variables that might be set
+local_dir=$PWD
+
 auto=0
 help=0
 debug=0
 java_set=0
 extended=0
+special=""
 
 # Tunables
-local_dir=$PWD
+
+extra=""			# Add here some extra packages to install
 use_ccache=1
 ccache_size="10G"
 make_jobs=4
@@ -68,6 +74,10 @@ do
             ;;
         -e | --extended)
              extended=1
+             shift
+            ;;
+        -s | --special)
+             special=$2
              shift
             ;;
         --) # End of all options
@@ -252,12 +262,33 @@ rm -rf tmp
 if [[ extended = 1 ]]; then
 	note "extended packages"
 	
+	$install ssh iostat bmon htop
+	
 	note Geany
 	$install geany
 
 	if [[ $distro = Arch ]]; then
 		$install android-udev
 	fi
+fi
 
+if [[ $special || $extra ]]; then
+note "user-defined packages"
+	
+	if [[ $special ]]; then
+		$install $special
+	fi
+	if [[ $extra ]]; then
+		$install $extra
+	fi
+fi
 
+echo ""
+echo "*******************"
+echo " All done!"
+echo "*******************"
+echo ""
+echo "For more info about setting up an Android environment"
+echo "make sure to check in here:  http://source.android.com/source/initializing.html"
+echo ""
 fi
