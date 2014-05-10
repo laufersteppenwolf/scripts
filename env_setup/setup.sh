@@ -14,6 +14,8 @@ Default behavior is to ask before installing anything.
     -j # 	| --java #			Specify the desired Java version
     -e   	| --extended		Install some extended, useful packages
     -s ".."	| --special ".."	Install some user-defined packages. If several packages are desired, please list them within ""
+    --no-java					Don't install java at all
+    --no-sdk					Don't install the Android SDK
 
 Javaversions to be specified:
 	1	Oracle JDK 6 (default)
@@ -32,6 +34,15 @@ function note() {
 	sleep 2
 }
 
+function skip() {
+	echo ""
+	echo "************************"
+	echo "*Skipping $1 "
+	echo "************************"
+	echo ""
+	sleep 2
+}
+
 # Reset all variables that might be set
 local_dir=$PWD
 
@@ -40,6 +51,8 @@ help=0
 debug=0
 java_set=0
 extended=0
+nojava=0
+nosdk=0
 special=""
 
 # Tunables
@@ -80,6 +93,14 @@ do
              special=$2
              shift
             ;;
+        --no-java)
+             nojava=1
+             shift
+            ;;
+        --no-sdk)
+             nosdk=1
+             shift
+            ;;
         --) # End of all options
             shift
             break
@@ -91,7 +112,7 @@ do
 done
 
 
-if [[ auto = 0 || java_set = 0 ]]; then
+if [[ $auto = 0 || $java_set = 0 ]]; then
 	echo "Please specify the Java version you would like me to install by typing the number:"
 	echo ""
 	echo "1)  Oracle JDK 6"
@@ -101,6 +122,7 @@ if [[ auto = 0 || java_set = 0 ]]; then
 	read java_package
 fi
 
+if [[ $nojava != 1 ]]; then
 if [[ $java_package = 1 ]]; then
 java="jdk-6u45-linux-x64.bin"
 javaversion=45
@@ -108,6 +130,7 @@ else if [[ $java_package = 2 ]]; then
 java_packages="openjdk-6-jre icedtea6-plugin openjdk-6-jdk"
 else if [[ $java_package = 3 ]]; then
 java_packages="openjdk-7-jre icedtea-7-plugin openjdk-7-jdk"
+fi
 fi
 fi
 fi
@@ -155,6 +178,7 @@ echo "export USE_CCACHE=1" >> ~/.bashrc
 ccache -M $ccache_size
 fi
 
+if [[ $nojava != 1 ]]; then
 if [[ $java_package = 1 ]]; then
 	note "Oracle JDK 6"
 	if [[ $distro = Ubuntu ]]; then
@@ -204,6 +228,10 @@ fi
 fi
 fi
 
+else
+	skip Java
+fi
+
 note GIT
 $install git
 
@@ -240,6 +268,7 @@ ln -s /usr/bin/python2-config ~/bin/python-config
 fi
 fi
 
+if [[ $nosdk != 1 ]]; then
 note SDK
 mkdir tmp
 cd tmp
@@ -258,6 +287,10 @@ echo -e '\n# Android tools\nexport PATH=${PATH}:~/adt-bundle/sdk/tools\nexport P
 rm -rf adt.zip
 cd $local_dir
 rm -rf tmp
+
+else
+	skip SDK
+fi
 
 if [[ extended = 1 ]]; then
 	note "extended packages"
