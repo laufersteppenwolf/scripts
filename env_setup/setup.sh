@@ -141,7 +141,6 @@ if [[ $help = 0 ]]; then		# skip the install if help is set
 if [[ $auto = 1 ]]; then
 auto_param_ubuntu="-y"
 auto_param_arch="--noconfirm"
-extended=1
 else
 auto_param_ubuntu=""
 auto_param_arch=""
