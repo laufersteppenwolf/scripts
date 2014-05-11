@@ -299,6 +299,10 @@ if [[ extended = 1 ]]; then
 	
 	note Geany
 	$install geany
+	
+	note "Dev-host commandline tool"
+	curl https://raw.githubusercontent.com/GermainZ/dev-host-cl/master/devhost.py > ~/bin/devhost
+	chmod +x ~/bin/devhost
 
 	if [[ $distro = Arch ]]; then
 		$install android-udev
