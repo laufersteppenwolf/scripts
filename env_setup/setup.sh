@@ -43,6 +43,81 @@ function skip() {
 	sleep 2
 }
 
+function detected() {
+	echo ""
+	echo "$1 is already installed"
+	echo ""
+}
+
+function missing() {
+	echo ""
+	tput setaf 1
+	echo "$1 is not installed"
+	tput sgr0
+	echo ""
+}
+
+function check() {
+	jdk=""
+	oracle=""
+	
+	if [[ -a /usr/bin/python2 || -a /usr/bin/python2.7 ]]; then
+		detected "Python 2"
+	else
+		missing "Python 2"
+	fi
+	
+	if [[ -a /usr/bin/git ]]; then
+		detected "Git"
+	else
+		missing "Git"
+	fi
+	
+	if [[ -a ~/bin/repo ]]; then
+		detected "repo"
+	else
+		missing "repo"
+	fi
+	
+	if [[ -a /usr/bin/ccache ]]; then
+		detected "Ccache"
+	else
+		missing "Ccache"
+	fi
+
+	if [[ -d ~/adt-bundle ]]; then
+		detected "Android SDK"
+	else
+		missing "Android SDK"
+	fi
+	
+	javaver=$(java -version &> test; cat test | grep version | cut -d ' ' -f3 | sed 's/"//' | cut -d '.' -f1,2 && rm test)
+	jdk=$(find /usr/ | grep jdk)
+	oracle=$(find /usr/ | grep "oracle/jre/bin")
+	if [[ $javaver = "1.7" && $jdk != "" ]]; then
+		detected "Java JDK 1.7"
+	else if [[ $javaver = "1.6" && $jdk != "" ]]; then
+			if [[ $oracle != "" ]]; then
+				detected "Oracle Java JDK 6"
+			else 
+				detected "OpenJDK 6"
+			fi
+		fi	
+	fi	
+
+	if [[ -a /usr/bin/geany ]]; then
+		detected "Geany"
+	else
+		missing "Geany"
+	fi
+
+	if [[ -a ~/bin/devhost ]]; then
+		detected "Dev-host commandline tool"
+	else
+		missing "Dev-host commandline tool"
+	fi
+}
+
 # Reset all variables that might be set
 local_dir=$PWD
 
@@ -101,6 +176,11 @@ do
              nosdk=1
              shift
             ;;
+        --check)
+			 skip=1
+             check
+             shift
+            ;;
         --) # End of all options
             shift
             break
@@ -111,6 +191,8 @@ do
     esac
 done
 
+
+if [[ $skip = 0 ]]; then		# skip the install if help is set
 
 if [[ $auto = 0 || $java_set = 0 ]]; then
 	echo "Please specify the Java version you would like me to install by typing the number:"
@@ -134,8 +216,6 @@ fi
 fi
 fi
 fi
-
-if [[ $skip = 0 ]]; then		# skip the install if help is set
 
 # Define the Parameter to append to the command
 if [[ $auto = 1 ]]; then
