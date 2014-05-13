@@ -16,6 +16,8 @@ Default behavior is to ask before installing anything.
     -s ".."	| --special ".."	Install some user-defined packages. If several packages are desired, please list them within ""
     --no-java					Don't install java at all
     --no-sdk					Don't install the Android SDK
+    -c		| --check			Run a check on what's currently installed
+    -n		| --needed			Only install packages that are not yet installed
 
 Javaversions to be specified:
 	1	Oracle JDK 6 (default)
@@ -63,30 +65,35 @@ function check() {
 	
 	if [[ -a /usr/bin/python2 || -a /usr/bin/python2.7 ]]; then
 		detected "Python 2"
+		nopython=1
 	else
 		missing "Python 2"
 	fi
 	
 	if [[ -a /usr/bin/git ]]; then
 		detected "Git"
+		nogit=1
 	else
 		missing "Git"
 	fi
 	
 	if [[ -a ~/bin/repo ]]; then
 		detected "repo"
+		norepo=1
 	else
 		missing "repo"
 	fi
 	
 	if [[ -a /usr/bin/ccache ]]; then
 		detected "Ccache"
+		noccache=1
 	else
 		missing "Ccache"
 	fi
 
 	if [[ -d ~/adt-bundle ]]; then
 		detected "Android SDK"
+		nosdk=1
 	else
 		missing "Android SDK"
 	fi
@@ -96,23 +103,28 @@ function check() {
 	oracle=$(find /usr/ | grep "oracle/jre/bin")
 	if [[ $javaver = "1.7" && $jdk != "" ]]; then
 		detected "Java JDK 1.7"
+		detect_nojava=3
 	else if [[ $javaver = "1.6" && $jdk != "" ]]; then
 			if [[ $oracle != "" ]]; then
 				detected "Oracle Java JDK 6"
+				detect_nojava=1
 			else 
 				detected "OpenJDK 6"
+				detect_nojava=2
 			fi
 		fi	
 	fi	
 
 	if [[ -a /usr/bin/geany ]]; then
 		detected "Geany"
+		nogeany=1
 	else
 		missing "Geany"
 	fi
 
 	if [[ -a ~/bin/devhost ]]; then
 		detected "Dev-host commandline tool"
+		nodevhost=1
 	else
 		missing "Dev-host commandline tool"
 	fi
@@ -128,6 +140,14 @@ java_set=0
 extended=0
 nojava=0
 nosdk=0
+detect_nojava=0
+nopython=0
+nogit=0
+norepo=0
+noccache=0
+nogeany=0
+nodevhost=0
+needed=0
 special=""
 
 # Tunables
@@ -176,8 +196,13 @@ do
              nosdk=1
              shift
             ;;
-        --check)
+        -c | --check)
 			 skip=1
+             check
+             shift
+            ;; 
+        -n | --needed)
+             needed=1
              check
              shift
             ;;
@@ -195,13 +220,27 @@ done
 if [[ $skip = 0 ]]; then		# skip the install if help is set
 
 if [[ $auto = 0 || $java_set = 0 ]]; then
-	echo "Please specify the Java version you would like me to install by typing the number:"
+	echo "Please specify the Java version you would like to have installed by typing the number:"
 	echo ""
 	echo "1)  Oracle JDK 6"
 	echo "2)  OpenJDK 6"
 	echo "3)  OpenJDK 7"
 	echo ""
 	read java_package
+fi
+
+if [[ $java_package = $detect_nojava ]]; then
+	if [[ $needed = 1 ]]; then
+		nojava=1
+	fi
+fi
+
+if [[ $debug = 1 ]]; then
+	echo "************************"
+	echo "java_package is $java_package "
+	echo "detect_nojava is $detect_nojava "
+	echo "************************"
+	sleep 5
 fi
 
 if [[ $nojava != 1 ]]; then
@@ -250,11 +289,15 @@ echo "ccache size is $ccache_size"
 note testing 
 fi
 
-note Ccache
-$install ccache
-if [[ $use_ccache = 1 ]]; then
-echo "export USE_CCACHE=1" >> ~/.bashrc
-ccache -M $ccache_size
+if [[ $noccache != 1 ]]; then
+	note Ccache
+	$install ccache
+	if [[ $use_ccache = 1 ]]; then
+	echo "export USE_CCACHE=1" >> ~/.bashrc
+	ccache -M $ccache_size
+	fi
+else
+	skip Ccache
 fi
 
 if [[ $nojava != 1 ]]; then
@@ -311,22 +354,30 @@ else
 	skip Java
 fi
 
-note GIT
-$install git
-
-note repo
-$install curl
-if [ ! -d ~/bin ]; then
-mkdir -p ~/bin
+if [[ $nogit != 1 ]]; then
+	note Git
+	$install git
+else
+	skip Git
 fi
-curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-chmod a+x ~/bin/repo
+
+if [[ $norepo != 1 ]]; then
+	note repo
+	$install curl
+	if [ ! -d ~/bin ]; then
+	mkdir -p ~/bin
+	fi
+	curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+	chmod a+x ~/bin/repo
+else
+	skip repo
+fi
 
 note "Various build tools"
 if [[ $distro = Ubuntu ]]; then
 $install bison build-essential curl flex git-core gnupg gperf libesd0-dev libncurses5-dev libsdl1.2-dev \
 		 libwxgtk2.8-dev libxml2 libxml2-utils lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev \
-		 g++-multilib gcc-multilib lib32ncurses5-dev lib32readline-gplv2-dev lib32z1-dev gcc tar htop iostat
+		 g++-multilib gcc-multilib lib32ncurses5-dev lib32readline-gplv2-dev lib32z1-dev gcc tar htop
 
 else if [[ $distro = Arch ]]; then		 
 $install gvfs gvfs-mtp gvfs-gphoto2 lib32-readline htop wget \
@@ -336,15 +387,19 @@ $install gvfs gvfs-mtp gvfs-gphoto2 lib32-readline htop wget \
 fi
 fi
 
-note Python
-if [[ $distro = Ubuntu ]]; then
-$install python
-else if [[ $distro = Arch ]]; then
-$install python2
-ln -s /usr/bin/python2 ~/bin/python
-ln -s /usr/bin/python2-config ~/bin/python-config
-# echo 'alias python="python2"' >> ~/.bashrc
-fi
+if [[ $nopython != 1 ]]; then
+	note Python
+	if [[ $distro = Ubuntu ]]; then
+	$install python
+	else if [[ $distro = Arch ]]; then
+	$install python2
+	ln -s /usr/bin/python2 ~/bin/python
+	ln -s /usr/bin/python2-config ~/bin/python-config
+	# echo 'alias python="python2"' >> ~/.bashrc
+	fi
+	fi
+else
+	skip Python
 fi
 
 if [[ $nosdk != 1 ]]; then
@@ -376,12 +431,20 @@ if [[ extended = 1 ]]; then
 	
 	$install ssh iostat bmon htop
 	
-	note Geany
-	$install geany
+	if [[ $nogeany != 1 ]]; then
+		note Geany
+		$install geany
+	else
+		skip Geany
+	fi
 	
-	note "Dev-host commandline tool"
-	curl https://raw.githubusercontent.com/GermainZ/dev-host-cl/master/devhost.py > ~/bin/devhost
-	chmod +x ~/bin/devhost
+	if [[ $nodevhost != 1 ]]; then
+		note "Dev-host commandline tool"
+		curl https://raw.githubusercontent.com/GermainZ/dev-host-cl/master/devhost.py > ~/bin/devhost
+		chmod +x ~/bin/devhost
+	else
+		skip "Dev-host commandline tool"
+	fi
 
 	if [[ $distro = Arch ]]; then
 		$install android-udev
