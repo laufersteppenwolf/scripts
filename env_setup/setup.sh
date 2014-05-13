@@ -47,7 +47,7 @@ function skip() {
 local_dir=$PWD
 
 auto=0
-help=0
+skip=0
 debug=0
 java_set=0
 extended=0
@@ -69,7 +69,7 @@ do
     case $1 in
         -h | --help)
              show_help
-             help=1
+             skip=1
              break
             ;; 
         -a | --automated)
@@ -135,7 +135,7 @@ fi
 fi
 fi
 
-if [[ $help = 0 ]]; then		# skip the install if help is set
+if [[ $skip = 0 ]]; then		# skip the install if help is set
 
 # Define the Parameter to append to the command
 if [[ $auto = 1 ]]; then
