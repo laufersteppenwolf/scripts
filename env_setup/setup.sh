@@ -9,15 +9,16 @@ Setup the complete build environment including all needed files/packages
 
 Default behavior is to ask before installing anything.
 
-    -h   	| --help           Display this help and exit
-    -a   	| --automated      Don't ask for anything and do everything completely automated.
+    -h   	| --help			Display this help and exit
+    -a   	| --automated		Don't ask for anything and do everything completely automated.
     -j # 	| --java #			Specify the desired Java version
     -e   	| --extended		Install some extended, useful packages
     -s ".."	| --special ".."	Install some user-defined packages. If several packages are desired, please list them within ""
     --no-java					Don't install java at all
     --no-sdk					Don't install the Android SDK
     -c		| --check			Run a check on what's currently installed
-    -n		| --needed			Only install packages that are not yet installed
+    -n		| --needed			Only install packages that are not yet installed (default)
+    -f		| --forced			Force (re-)install of all packages
 
 Javaversions to be specified:
 	1	Oracle JDK 6 (default)
@@ -99,8 +100,8 @@ function check() {
 	fi
 	
 	javaver=$(java -version &> test; cat test | grep version | cut -d ' ' -f3 | sed 's/"//' | cut -d '.' -f1,2 && rm test)
-	jdk=$(find /usr/ | grep jdk)
-	oracle=$(find /usr/ | grep "oracle/jre/bin")
+	jdk=$(find /usr/ | grep jdk)										# Find better/faster way
+	oracle=$(find /usr/ | grep "oracle/jre/bin")						# Find better/faster way
 	if [[ $javaver = "1.7" && $jdk != "" ]]; then
 		detected "Java JDK 1.7"
 		detect_nojava=3
@@ -147,7 +148,8 @@ norepo=0
 noccache=0
 nogeany=0
 nodevhost=0
-needed=0
+needed=1
+forced=0
 special=""
 
 # Tunables
@@ -203,7 +205,12 @@ do
             ;; 
         -n | --needed)
              needed=1
-             check
+#             check
+             shift
+            ;;
+        -f | --forced)
+             needed=0
+             forced=1
              shift
             ;;
         --) # End of all options
@@ -218,6 +225,20 @@ done
 
 
 if [[ $skip = 0 ]]; then		# skip the install if help is set
+
+if [[ $forced != 1 ]]; then
+	check
+else
+	needed=0					# Make sure needed is not set
+	tput setaf 1
+	echo ""
+	echo "***********************************************"
+	echo "* Forcing (re-) installation of all packages! *"
+	echo "***********************************************"
+	echo ""
+	tput sgr0
+	sleep 3
+fi
 
 if [[ $auto = 0 || $java_set = 0 ]]; then
 	echo "Please specify the Java version you would like to have installed by typing the number:"
