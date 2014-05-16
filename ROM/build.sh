@@ -21,8 +21,8 @@ EOL
 }
 
 # Configurable parameters
-ccache_dir=/home/laufersteppenwolf/ccache/CM11
-ccache_log=/home/laufersteppenwolf/ccache/CM11/ccache.log
+ccache_dir=$HOME/ccache/CM11
+ccache_log=$HOME/ccache/CM11/ccache.log
 jobs_sync=30
 jobs_build=20
 rom=cm
