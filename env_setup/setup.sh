@@ -240,14 +240,16 @@ else
 	sleep 3
 fi
 
-if [[ $auto = 0 || $java_set = 0 ]]; then
-	echo "Please specify the Java version you would like to have installed by typing the number:"
-	echo ""
-	echo "1)  Oracle JDK 6"
-	echo "2)  OpenJDK 6"
-	echo "3)  OpenJDK 7"
-	echo ""
-	read java_package
+if [[ $nojava != 1 ]]; then
+	if [[ $auto = 0 || $java_set = 0 ]]; then
+		echo "Please specify the Java version you would like to have installed by typing the number:"
+		echo ""
+		echo "1)  Oracle JDK 6"
+		echo "2)  OpenJDK 6"
+		echo "3)  OpenJDK 7"
+		echo ""
+		read java_package
+	fi
 fi
 
 if [[ $java_package = $detect_nojava ]]; then
