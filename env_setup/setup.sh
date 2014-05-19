@@ -469,8 +469,13 @@ if [[ extended = 1 ]]; then
 		skip "Dev-host commandline tool"
 	fi
 
+
+	note "ADB drivers"
 	if [[ $distro = Arch ]]; then
 		$install android-udev
+	else if [[ $distro = Ubuntu ]]; then
+			$install android-tools-adb android-tools-fastboot android-tools-fsutils
+		fi
 	fi
 fi
 
