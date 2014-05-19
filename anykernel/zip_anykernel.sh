@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # CWM anykernel packing script
 # By laufersteppenwolf
 
