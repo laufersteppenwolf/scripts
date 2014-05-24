@@ -28,6 +28,7 @@ jobs_build=20
 rom=cm
 rom_version=11
 device_codename=p880
+make_command="bacon"
 
 
 # Reset all variables that might be set
@@ -83,17 +84,6 @@ done
 
 if [[ $help = 0 ]]; then		# skip the build if help is set
 
-# Define the future zipname, 'cause if we start the build 23:59 on day 1
-# day 1 will be used for the zip, but day 2 would be used for the upload command
-zipname=$rom-$rom_version-$(date -u +%Y%m%d)-UNOFFICIAL-$device_codename.zip
-
-if [[ $debug = 1 ]]; then
-	echo '##########'
-	echo 'future zipname'
-	echo '##########'
-	echo ''
-	echo $zipname
-fi
 
 if [[ $noccache = 0 ]]; then		# use ccache by default
 echo ''
@@ -160,10 +150,19 @@ if [[ $debug = 1 ]]; then
 	echo ''
 fi
 
-time make -j$jobs_build bacon	# build with the desired -j value
+time make -j$jobs_build $make_command	# build with the desired -j value
 
 # resetting ccache
 export USE_CCACHE=0
+
+zipname=$(ls out/target/product/$device_codename/$rom-$rom_version-*.zip | sed "s/out\/target\/product\/${device_codename}\///" )
+if [[ $debug = 1 ]]; then
+	echo '##########'
+	echo 'zipname'
+	echo '##########'
+	echo ''
+	echo $zipname
+fi
 
 if [[ $release = 1 ]]; then		# upload the compiled build
 	echo ''
