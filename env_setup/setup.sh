@@ -60,9 +60,27 @@ function missing() {
 	echo ""
 }
 
+function getDistro() {
+	# Find the distro and define the correct install command
+	distro=$(cat /etc/issue | cut -d " " -f1)
+	if [[ $distro = Ubuntu ]]; then
+		install="sudo apt-get install $auto_param_ubuntu"
+	else if [[ $distro = Arch ]]; then
+			install="sudo pacman -S $auto_param_arch"
+		else
+			install="exit"
+		fi
+	fi
+}
+
 function check() {
+	getDistro
+	
 	jdk=""
 	oracle=""
+	openjdk7=""
+	openjdk6=""
+	oraclejdk6=""
 	
 	if [[ -a /usr/bin/python2 || -a /usr/bin/python2.7 ]]; then
 		detected "Python 2"
@@ -99,22 +117,44 @@ function check() {
 		missing "Android SDK"
 	fi
 	
+if [[ $distro = Ubuntu ]]; then	
 	javaver=$(java -version &> test; cat test | grep version | cut -d ' ' -f3 | sed 's/"//' | cut -d '.' -f1,2 && rm test)
-	jdk=$(find /usr/ | grep jdk)										# Find better/faster way
-	oracle=$(find /usr/ | grep "oracle/jre/bin")						# Find better/faster way
+	jdk=$(sudo find /usr/ | grep jdk)										# Find better/faster way
+	oracle=$(sudo find /usr/ | grep "oracle/jre/bin")						# Find better/faster way
 	if [[ $javaver = "1.7" && $jdk != "" ]]; then
 		detected "Java JDK 1.7"
 		detect_nojava=3
-	else if [[ $javaver = "1.6" && $jdk != "" ]]; then
-			if [[ $oracle != "" ]]; then
-				detected "Oracle Java JDK 6"
-				detect_nojava=1
-			else 
-				detected "OpenJDK 6"
-				detect_nojava=2
-			fi
-		fi	
-	fi	
+	fi
+	if [[ $javaver = "1.6" && $jdk != "" ]]; then
+		if [[ $oracle != "" ]]; then
+			detected "Oracle Java JDK 6"
+			detect_nojava=1
+		fi
+		if [[ $oracle = "" ]]; then
+			detected "OpenJDK 6"
+			detect_nojava=2
+		fi
+	fi		
+fi
+if [[ $distro = Arch ]]; then
+	openjdk7=$(pacman -Q | grep jdk7-openjdk)
+	openjdk6=$(pacman -Q | grep jdk6-openjdk)
+	oraclejdk6=$(pacman -Q | grep 'jdk6 ')
+
+	if [[ $openjdk7 != "" ]]; then
+		detected "Java JDK 1.7"
+		detect_nojava=3
+	fi
+	if [[ $openjdk6 != "" ]]; then
+		detected "OpenJDK 6"
+		detect_nojava=2
+	fi
+	if [[ $oraclejdk6 != "" ]]; then
+		detected "Oracle Java JDK 6"
+		detect_nojava=1
+	fi
+fi
+
 
 	if [[ -a /usr/bin/geany ]]; then
 		detected "Geany"
@@ -228,6 +268,7 @@ if [[ $skip = 0 ]]; then		# skip the install if help is set
 
 if [[ $forced != 1 ]]; then
 	check
+	getDistro
 else
 	needed=0					# Make sure needed is not set
 	tput setaf 1
@@ -238,6 +279,7 @@ else
 	echo ""
 	tput sgr0
 	sleep 3
+	getDistro
 fi
 
 if [[ $nojava != 1 ]]; then
@@ -250,6 +292,17 @@ if [[ $nojava != 1 ]]; then
 		echo ""
 		read java_package
 	fi
+fi
+
+if [[ $distro = Arch && $java_package = 2 ]]; then
+	tput setaf 1
+	echo "You are attempting to install openJDK 6"
+	echo "openJDK6, however, is no longer supported by Arch Linux"
+	echo "which is why this script will install Oracle's JDK6 instead!"
+	echo ""
+	tput sgr0
+	java_package=1
+	sleep 3
 fi
 
 if [[ $java_package = $detect_nojava ]]; then
