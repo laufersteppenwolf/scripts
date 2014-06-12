@@ -61,7 +61,8 @@ do
             shift
             ;;
         -j)
-            jobs_build=$2
+			shift
+            jobs_build=$1
             shift
             ;;
         -c | --clean)
@@ -71,7 +72,27 @@ do
         -d | --debug)
             debug=1
             shift
+            ;;
+        --device)
+			shift
+            device_codename=$1
+            shift
             ;; 
+        --makecommand)
+			shift
+            make_command=$1
+            shift
+            ;; 
+        --rom)
+			shift
+            rom=$1
+            shift
+            ;;
+        --romversion)
+			shift
+            rom_version=$1
+            shift
+            ;;
         --) # End of all options
             shift
             break
