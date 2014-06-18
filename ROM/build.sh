@@ -27,7 +27,7 @@ jobs_sync=30
 jobs_build=20
 rom=cm
 rom_version=11
-device_codename=p880
+device_codename="p880"
 make_command="bacon"
 
 
@@ -135,6 +135,10 @@ else
 	repo sync -j$jobs_sync -d
 fi
 
+# In case we have several devices to compile...
+for i in $device_codename
+do
+
 if [[ $clean = 1 ]]; then
 	echo ''
 	echo '##########'
@@ -146,7 +150,7 @@ fi
 
 echo ''
 echo '##########'
-echo 'lunch p880'
+echo "lunch $device_codename"
 echo '##########'
 echo ''
 lunch $rom""_$device_codename-eng
@@ -193,4 +197,5 @@ if [[ $release = 1 ]]; then		# upload the compiled build
 	scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname 	# upload via ssh too goo.im servers
 	echo ''
 fi
+done
 fi
