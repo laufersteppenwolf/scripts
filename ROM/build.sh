@@ -41,6 +41,7 @@ help=0
 debug=0
 nightly=0
 dropbox=0
+mirror=0
 zipname=""
 
 while :
@@ -102,6 +103,10 @@ do
             ;;
         --nightly)
             nightly=1
+            shift
+            ;;
+        --mirror)
+            mirror=1
             shift
             ;;
         --) # End of all options
@@ -213,10 +218,16 @@ if [[ $release = 1 ]]; then		# upload the compiled build
 	echo '##########'
 	echo 'uploading build'
 	echo '##########'
-if [[ $nightly = 1 ]]; then
+	if [[ $nightly = 1 ]]; then
 		scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname &	# upload via ssh too goo.im servers
+		if [[ $mirror = 1 ]]; then
+			cp ./out/target/product/$device_codename/$zipname $HOME/droideveloper/CM11/$zipname &
+		fi
 	else
 		scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname 	# upload via ssh too goo.im servers
+		if [[ $mirror = 1 ]]; then
+			cp ./out/target/product/$device_codename/$zipname $HOME/droideveloper/CM11/$zipname 
+		fi
 		echo ''
 	fi
 done
