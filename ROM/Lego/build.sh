@@ -29,6 +29,7 @@ rom=full
 rom_version=11
 device_codename=p880
 make_command="lego"
+dropbox_path="$HOME/Dropbox/Android/lego"
 
 
 # Reset all variables that might be set
@@ -38,6 +39,7 @@ release=0
 clean=0
 help=0
 debug=0
+nightly=0
 zipname=""
 
 while :
@@ -69,7 +71,11 @@ do
             clean=1
             shift
             ;;
-        -d | --debug)
+        -d | --dropbox)
+            dropbox=1
+            shift
+            ;;            
+        --debug)
             debug=1
             shift
             ;;
@@ -93,6 +99,10 @@ do
             rom_version=$1
             shift
             ;;
+        --nightly)
+            nightly=1
+            shift
+            ;; 
         --) # End of all options
             shift
             break
@@ -128,12 +138,30 @@ echo '##########'
 echo 'syncing up'
 echo '##########'
 echo ''
+#reset frameworks base to properly sync and apply the patch without errors (only for p880)
+#cd frameworks/base
+#git reset --hard HEAD
+#croot
+#echo ''
+#echo '##########'
+#echo ''
 if [[ $nosync = 1 ]]; then
 	echo 'skipping sync'
 else
 	repo sync -j$jobs_sync -d
 fi
 
+#echo ''                                                                                                                         ############################
+#echo '##########'                                                                                                               ###                      ###
+#echo 'applying double-press power patch'                                                                                        ###                      ###
+#echo '##########'                                                                                                               ###                      ###
+#echo ''                                                                                                                         ### only needed for p880 ###
+#cp ./WindowManager-Fix-double-press-power-button.patch ./frameworks/base/WindowManager-Fix-double-press-power-button.patch      ###                      ###
+#cd frameworks/base                                                                                                              ###                      ###
+#git apply WindowManager-Fix-double-press-power-button.patch                                                                     ###                      ###
+#rm WindowManager-Fix-double-press-power-button.patch                                                                            ###                      ###
+#croot                                                                                                                           ############################
+#
 #cd build
 ### git remote add justarchi git@github.com:JustArchi/android_build.git
 ### git fetch justarchi
@@ -184,7 +212,7 @@ time make -j$jobs_build $make_command	# build with the desired -j value
 # resetting ccache
 export USE_CCACHE=0
 
-zipname=$(ls out/target/product/$device_codename/Lego--*.zip | sed "s/out\/target\/product\/${device_codename}\///")
+zipname=$(ls out/target/product/$device_codename/Lego--*.zip | sed "s/out\/target\/product\/$device_codename\///")
 if [[ $debug = 1 ]]; then
 	echo '##########'
 	echo 'zipname'
@@ -193,12 +221,24 @@ if [[ $debug = 1 ]]; then
 	echo $zipname
 fi
 
+if [[ $dropbox = 1 ]]; then
+	echo ''
+	echo '##########'
+	echo 'copying build to Dropbox'
+	echo '##########'
+	cp ./out/target/product/$device_codename/$zipname "$dropbox_path/$zipname"
+fi
+
 if [[ $release = 1 ]]; then		# upload the compiled build
 	echo ''
 	echo '##########'
 	echo 'uploading build'
 	echo '##########'
-	scp ./out/target/product/$device_codename/$zipname goo.im:public_html/Lego/$zipname 	# upload via ssh too goo.im servers
-	echo ''
+	if [[ $nightly = 1 ]]; then
+		scp ./out/target/product/$device_codename/$zipname goo.im:public_html/Lego/$zipname &	# upload via ssh too goo.im servers
+	else
+		scp ./out/target/product/$device_codename/$zipname goo.im:public_html/Lego/$zipname 	# upload via ssh too goo.im servers
+		echo ''
+	fi
 fi
 fi
