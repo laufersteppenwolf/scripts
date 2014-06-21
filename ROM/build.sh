@@ -29,6 +29,7 @@ rom=cm
 rom_version=11
 device_codename="p880"
 make_command="bacon"
+dropbox_path="$HOME/Dropbox/Android/CM11"
 
 
 # Reset all variables that might be set
@@ -39,6 +40,7 @@ clean=0
 help=0
 debug=0
 nightly=0
+dropbox=0
 zipname=""
 
 while :
@@ -70,7 +72,11 @@ do
             clean=1
             shift
             ;;
-        -d | --debug)
+        -d | --dropbox)
+            dropbox=1
+            shift
+            ;;            
+        --debug)
             debug=1
             shift
             ;;
@@ -192,6 +198,14 @@ if [[ $debug = 1 ]]; then
 	echo '##########'
 	echo ''
 	echo $zipname
+fi
+
+if [[ $dropbox = 1 ]]; then
+	echo ''
+	echo '##########'
+	echo 'copying build to Dropbox'
+	echo '##########'
+	cp ./out/target/product/$device_codename/$zipname "$dropbox_path/$zipname"
 fi
 
 if [[ $release = 1 ]]; then		# upload the compiled build
