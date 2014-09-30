@@ -155,6 +155,13 @@ fi
 for i in $device_codename
 do
 
+echo ''
+echo '##########'
+echo "lunch $device_codename"
+echo '##########'
+echo ''
+lunch $rom""_$device_codename-eng
+
 if [[ $clean = 1 ]]; then
 	echo ''
 	echo '##########'
@@ -163,13 +170,6 @@ if [[ $clean = 1 ]]; then
 	echo ''
 	make clean
 fi
-
-echo ''
-echo '##########'
-echo "lunch $device_codename"
-echo '##########'
-echo ''
-lunch $rom""_$device_codename-eng
 
 if [[ $clean = 0 ]]; then		# make installclean only if "make clean" wasn't issued
 	echo ''
