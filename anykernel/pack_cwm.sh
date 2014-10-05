@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 # CWM anykernel packing script
 # By laufersteppenwolf
 
 ####### defines #######
-zipname="WWJB_v009_anykernel.zip"                  # filename of the anykernel updater zip
+zipname="WWJB_v004_anykernel_KK_SGT3-$(date +%Y-%m-%d_%H%M).zip"
 
 
 echo "*****************************"
@@ -32,13 +32,13 @@ cp ../tools/testkey.x509.pem testkey.x509.pem
 cp ../tools/testkey.pk8 testkey.pk8
 
 # Zipping stuff up
-zip -r temp_zip.zip META-INF kernel system                                   # zip all needed files into "temp_zip.zip"
+zip -r temp_zip.zip META-INF kernel system 
 echo "ZIP Ready, signing it"
-java -jar signapk.jar -w testkey.x509.pem testkey.pk8 temp_zip.zip $zipname  # sign the zip and name the signed zip "$zipname"
+java -jar signapk.jar -w testkey.x509.pem testkey.pk8 temp_zip.zip "$zipname"
 
-cp -f $zipname ../$zipname                                                   # copy the finished file into the output folder
+cp -f "$zipname" ../../out/"$zipname"
 
-# Removing the working dir
+# Removing out
 
 cd ..
 rm -rf out
