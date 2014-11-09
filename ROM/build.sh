@@ -73,6 +73,10 @@ do
             clean=1
             shift
             ;;
+        -nc | --no-clean)
+            clean=-1
+            shift
+            ;;
         -d | --dropbox)
             dropbox=1
             shift
