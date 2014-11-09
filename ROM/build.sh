@@ -200,39 +200,50 @@ time make -j$jobs_build $make_command	# build with the desired -j value
 # resetting ccache
 export USE_CCACHE=0
 
-zipname=$(ls out/target/product/$device_codename/$rom-$rom_version-*.zip | sed "s/out\/target\/product\/${device_codename}\///" )
-if [[ $debug = 1 ]]; then
-	echo '##########'
-	echo 'zipname'
-	echo '##########'
-	echo ''
-	echo $zipname
-fi
+if [[ -a ./out/target/product/$device_codename/$rom-$rom_version-*.zip ]]; then
 
-if [[ $dropbox = 1 ]]; then
-	echo ''
-	echo '##########'
-	echo 'copying build to Dropbox'
-	echo '##########'
-	cp ./out/target/product/$device_codename/$zipname "$dropbox_path/$zipname"
-fi
-
-if [[ $release = 1 ]]; then		# upload the compiled build
-	echo ''
-	echo '##########'
-	echo 'uploading build'
-	echo '##########'
-	if [[ $nightly = 1 ]]; then
-		scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname &	# upload via ssh too goo.im servers
-		if [[ $mirror = 1 ]]; then
-			cp ./out/target/product/$device_codename/$zipname $HOME/droideveloper/CM11/$zipname &
-		fi
-	else
-		scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname 	# upload via ssh too goo.im servers
-		if [[ $mirror = 1 ]]; then
-			cp ./out/target/product/$device_codename/$zipname $HOME/droideveloper/CM11/$zipname 
-		fi
+	zipname=$(ls out/target/product/$device_codename/$rom-$rom_version-*.zip | sed "s/out\/target\/product\/${device_codename}\///" )
+	if [[ $debug = 1 ]]; then
+		echo '##########'
+		echo 'zipname'
+		echo '##########'
 		echo ''
+		echo $zipname
 	fi
+
+	if [[ $dropbox = 1 ]]; then
+		echo ''
+		echo '##########'
+		echo 'copying build to Dropbox'
+		echo '##########'
+		cp ./out/target/product/$device_codename/$zipname "$dropbox_path/$zipname"
+	fi
+
+	if [[ $release = 1 ]]; then		# upload the compiled build
+		echo ''
+		echo '##########'
+		echo 'uploading build'
+		echo '##########'
+		if [[ $nightly = 1 ]]; then
+			scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname &	# upload via ssh too goo.im servers
+			if [[ $mirror = 1 ]]; then
+				cp ./out/target/product/$device_codename/$zipname $HOME/droideveloper/CM11/$zipname &
+			fi
+		else
+			scp ./out/target/product/$device_codename/$zipname goo.im:public_html/CM11/$zipname 	# upload via ssh too goo.im servers
+			if [[ $mirror = 1 ]]; then
+				cp ./out/target/product/$device_codename/$zipname $HOME/droideveloper/CM11/$zipname 
+			fi
+			echo ''
+		fi
+	fi
+	
+notify-send "${zipname} \nBuild finished successfully!"
+
+else
+
+notify-send "Build failed!"
+
+fi
 done
 fi
